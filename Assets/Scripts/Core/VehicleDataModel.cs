@@ -9,15 +9,16 @@ using UnityEngine;
 [Serializable]
 public class VehicleDataModel
 {
-    // ── Private backing fields (Encapsulation) ───────────────────────────────
-    // Note: JsonUtility requires these to be public or [SerializeField] for deserialization.
-    // We use a two-step approach: deserialize into a raw DTO then copy with validation.
-    [SerializeField] private float speed;
-    [SerializeField] private float rpm;
-    [SerializeField] private float battery;
-    [SerializeField] private float temp;
+    // ── Raw deserialization fields ───────────────────────────────────────────
+    // JsonUtility reliably deserializes public fields in plain C# classes.
+    // These are never accessed directly outside this class — all reads go
+    // through the validated properties below (Encapsulation).
+    public float speed;
+    public float rpm;
+    public float battery;
+    public float temp;
 
-    // ── Validated Properties ─────────────────────────────────────────────────
+    // ── Validated Properties (Encapsulation) ────────────────────────────────
     public float Speed
     {
         get => speed;
@@ -45,7 +46,7 @@ public class VehicleDataModel
     // ── Factory method (Abstraction over JsonUtility) ────────────────────────
     /// <summary>
     /// Parse a JSON string into a validated VehicleDataModel.
-    /// Hides JsonUtility complexity from the caller.
+    /// Hides deserialization complexity from the caller.
     /// </summary>
     public static VehicleDataModel FromJson(string json)
     {
@@ -57,15 +58,15 @@ public class VehicleDataModel
 
         try
         {
-            VehicleDataModel raw = JsonUtility.FromJson<VehicleDataModel>(json);
+            VehicleDataModel model = JsonUtility.FromJson<VehicleDataModel>(json);
 
-            // Re-assign through properties to apply clamping validation
-            raw.Speed       = raw.speed;
-            raw.RPM         = raw.rpm;
-            raw.Battery     = raw.battery;
-            raw.Temperature = raw.temp;
+            // Run values through property setters to apply clamping validation
+            model.Speed       = model.speed;
+            model.RPM         = model.rpm;
+            model.Battery     = model.battery;
+            model.Temperature = model.temp;
 
-            return raw;
+            return model;
         }
         catch (Exception e)
         {
