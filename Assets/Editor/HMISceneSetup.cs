@@ -91,10 +91,7 @@ public static class HMISceneSetup
         so.FindProperty("tempGauge").objectReferenceValue    = tg;
         so.ApplyModifiedProperties();
 
-        // ── EventSystem ──────────────────────────────────────────────────────
-        var esGO = new GameObject("EventSystem");
-        esGO.AddComponent<UnityEngine.EventSystems.EventSystem>();
-        esGO.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+        // No EventSystem needed — this HMI is display-only, no UI interaction required.
 
         // ── Save scene ───────────────────────────────────────────────────────
         System.IO.Directory.CreateDirectory(Application.dataPath + "/Scenes");
