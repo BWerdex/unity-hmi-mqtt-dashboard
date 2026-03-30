@@ -91,7 +91,24 @@ public static class HMISceneSetup
         so.FindProperty("tempGauge").objectReferenceValue    = tg;
         so.ApplyModifiedProperties();
 
-        // No EventSystem needed — this HMI is display-only, no UI interaction required.
+        // ── EventSystem (new Input System) ───────────────────────────────────
+        // Unity auto-creates an EventSystem with StandaloneInputModule when a Canvas
+        // is added — find it and replace the module with InputSystemUIInputModule.
+        var existingES = Object.FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+        GameObject esGO;
+        if (existingES != null)
+        {
+            esGO = existingES.gameObject;
+            var oldModule = esGO.GetComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            if (oldModule != null) Object.DestroyImmediate(oldModule);
+        }
+        else
+        {
+            esGO = new GameObject("EventSystem");
+            esGO.AddComponent<UnityEngine.EventSystems.EventSystem>();
+        }
+        if (esGO.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>() == null)
+            esGO.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
 
         // ── Save scene ───────────────────────────────────────────────────────
         System.IO.Directory.CreateDirectory(Application.dataPath + "/Scenes");
