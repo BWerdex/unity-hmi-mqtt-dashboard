@@ -43,9 +43,18 @@ public class MQTTManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        ConnectOnAwakeIfNeeded();
     }
 
     private void Start()
+    {
+        // Connection is handled in Awake() to guarantee it runs before
+        // any other script's Start() attempts to subscribe.
+    }
+
+    // Called in Awake after singleton setup so all subscribers can rely
+    // on the connection being ready by the time their Start() runs.
+    private void ConnectOnAwakeIfNeeded()
     {
         if (connectOnStart)
             Connect(brokerHost, brokerPort);
