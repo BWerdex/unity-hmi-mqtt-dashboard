@@ -2,31 +2,30 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Engine temperature gauge — horizontal bar matching Figma design.
-/// Cyan/blue bar with icon background, shows temperature in °C.
+/// Fuel gauge — horizontal bar matching Figma design.
+/// Amber/orange bar with icon background, shows fuel level as percentage.
 /// Demonstrates: Inheritance (extends BaseGauge), Polymorphism (overrides UpdateDisplay, OnAlert).
 /// </summary>
-public class TemperatureGauge : BaseGauge
+public class FuelGauge : BaseGauge
 {
     [Header("Bar References")]
     [SerializeField] private Image fillBar;
     [SerializeField] private Image iconBg;
 
-    private static readonly Color BarColor   = new Color(0.310f, 0.765f, 0.973f, 1f); // #4FC3F7 cyan
+    private static readonly Color BarColor   = new Color(0.961f, 0.651f, 0.137f, 1f); // #F5A623 amber
     private static readonly Color AlertColor = new Color(1f,     0.267f, 0.267f, 1f); // #FF4444
-    private static readonly Color TrackColor = new Color(0.173f, 0.192f, 0.247f, 1f); // #2C3140
 
     protected override void Awake()
     {
         base.Awake();
-        Label = "TEMPERATURE";
-        MinValue = 40f;
-        MaxValue = 120f;
-        AlertThresholdMax = 100f;
+        Label = "FUEL";
+        MinValue = 0f;
+        MaxValue = 100f;
+        AlertThresholdMin = 15f;
         if (fillBar != null) fillBar.color = BarColor;
     }
 
-    /// <summary>Polymorphism: fills cyan bar and shows °C value.</summary>
+    /// <summary>Polymorphism: fills amber bar proportionally to fuel level.</summary>
     protected override void UpdateDisplay(float value)
     {
         if (fillBar != null)
@@ -35,7 +34,7 @@ public class TemperatureGauge : BaseGauge
             valueText.text = Mathf.RoundToInt(value).ToString();
     }
 
-    /// <summary>Polymorphism: turns red on overheat.</summary>
+    /// <summary>Polymorphism: turns red on low fuel.</summary>
     protected override void OnAlert(float value)
     {
         if (fillBar   != null) fillBar.color   = AlertColor;
@@ -47,6 +46,6 @@ public class TemperatureGauge : BaseGauge
     {
         if (fillBar   != null) fillBar.color   = BarColor;
         if (valueText != null) valueText.color  = Color.white;
-        if (iconBg    != null) iconBg.color     = new Color(0.039f, 0.125f, 0.251f, 1f); // dark blue
+        if (iconBg    != null) iconBg.color     = new Color(0.353f, 0.196f, 0f, 1f); // dark amber
     }
 }

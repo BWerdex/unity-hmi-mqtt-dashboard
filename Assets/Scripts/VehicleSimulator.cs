@@ -21,6 +21,7 @@ public class VehicleSimulator : MonoBehaviour
     private float _rpm      = 800f;
     private float _battery  = 85f;
     private float _temp     = 60f;
+    private float _fuel     = 68f;
 
     // State timers
     private float _stateTimer = 0f;
@@ -133,6 +134,11 @@ public class VehicleSimulator : MonoBehaviour
         _rpm     += Random.Range(-50f, 50f);
         _temp    += Random.Range(-0.2f, 0.2f);
 
+        // Fuel drains slowly while driving, faster at high speed
+        float fuelDrain = _state == DriveState.Idle ? 0.001f
+                        : Mathf.Lerp(0.003f, 0.012f, _speed / 260f);
+        _fuel = Mathf.Clamp(_fuel - fuelDrain, 0f, 100f);
+
         _speed   = Mathf.Clamp(_speed,   0f, 260f);
         _rpm     = Mathf.Clamp(_rpm,     0f, 8000f);
         _temp    = Mathf.Clamp(_temp,   40f, 120f);
@@ -146,7 +152,7 @@ public class VehicleSimulator : MonoBehaviour
 
         // InvariantCulture ensures decimal point (.) not comma — locale-safe JSON
         var ci = CultureInfo.InvariantCulture;
-        string json = $"{{\"speed\":{_speed.ToString("F1", ci)},\"rpm\":{_rpm.ToString("F0", ci)},\"battery\":{_battery.ToString("F1", ci)},\"temp\":{_temp.ToString("F1", ci)}}}";
+        string json = $"{{\"speed\":{_speed.ToString("F1", ci)},\"rpm\":{_rpm.ToString("F0", ci)},\"battery\":{_battery.ToString("F1", ci)},\"temp\":{_temp.ToString("F1", ci)},\"fuel\":{_fuel.ToString("F1", ci)}}}";
         MQTTManager.Instance.Publish("hmi/vehicle", json);
     }
 

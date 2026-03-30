@@ -17,6 +17,7 @@ public class VehicleDataModel
     public float rpm;
     public float battery;
     public float temp;
+    public float fuel;
 
     // ── Validated Properties (Encapsulation) ────────────────────────────────
     public float Speed
@@ -43,6 +44,12 @@ public class VehicleDataModel
         set => temp = Mathf.Clamp(value, -40f, 150f);
     }
 
+    public float Fuel
+    {
+        get => fuel;
+        set => fuel = Mathf.Clamp(value, 0f, 100f);
+    }
+
     // ── Factory method (Abstraction over JsonUtility) ────────────────────────
     /// <summary>
     /// Parse a JSON string into a validated VehicleDataModel.
@@ -65,6 +72,7 @@ public class VehicleDataModel
             model.RPM         = model.rpm;
             model.Battery     = model.battery;
             model.Temperature = model.temp;
+            model.Fuel        = model.fuel;
 
             return model;
         }
@@ -87,6 +95,7 @@ public class VehicleDataModel
             "RPM"         => RPM,
             "BATTERY"     => Battery,
             "TEMPERATURE" => Temperature,
+            "FUEL"        => Fuel,
             _             => 0f
         };
     }

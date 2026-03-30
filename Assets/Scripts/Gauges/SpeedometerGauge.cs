@@ -2,21 +2,20 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Speedometer gauge — rotates a needle and shows km/h value.
-/// Demonstrates: Inheritance (extends BaseGauge), Polymorphism (overrides UpdateDisplay and OnAlert).
+/// Speedometer — circular arc gauge matching Figma Modern Car Gauge Cluster design.
+/// Blue arc fill on dark grey ring track, large white number in center.
+/// Demonstrates: Inheritance (extends BaseGauge), Polymorphism (overrides UpdateDisplay, OnAlert).
 /// </summary>
 public class SpeedometerGauge : BaseGauge
 {
-    [Header("Speedometer Config")]
-    [SerializeField] private Transform needleTransform;
-    [SerializeField] private float needleMinAngle = 135f;   // angle at 0 km/h (degrees, Z-axis)
-    [SerializeField] private float needleMaxAngle = -135f;  // angle at 260 km/h
-    [SerializeField] private Image needleImage;
-    [SerializeField] private Image arcFillImage;
+    [Header("Arc References")]
+    [SerializeField] private Image trackRing;
+    [SerializeField] private Image arcFill;
+    [SerializeField] private float arcFillRange = 0.75f; // 270 degrees of 360
 
-    // HUD colors
-    private static readonly Color NormalColor  = new Color(0f,    1f,    0.8f, 1f);  // #00FFCC
-    private static readonly Color AlertColor   = new Color(1f,    0.27f, 0.27f, 1f); // #FF4444
+    private static readonly Color ArcColor   = new Color(0.294f, 0.620f, 0.973f, 1f); // #4B9EF8 blue
+    private static readonly Color AlertColor = new Color(1f,     0.267f, 0.267f, 1f); // #FF4444
+    private static readonly Color TrackColor = new Color(0.173f, 0.192f, 0.247f, 1f); // #2C3140
 
     protected override void Awake()
     {
@@ -24,45 +23,30 @@ public class SpeedometerGauge : BaseGauge
         Label = "SPEED";
         MinValue = 0f;
         MaxValue = 260f;
-        AlertThresholdMax = 200f;  // alert above 200 km/h
+        AlertThresholdMax = 200f;
+        if (trackRing != null) trackRing.color = TrackColor;
+        if (arcFill   != null) arcFill.color   = ArcColor;
     }
 
-    /// <summary>
-    /// Polymorphism: overrides BaseGauge.UpdateDisplay to rotate the needle and update text.
-    /// </summary>
+    /// <summary>Polymorphism: fills the arc proportionally to speed value.</summary>
     protected override void UpdateDisplay(float value)
     {
-        // Rotate needle
-        if (needleTransform != null)
-        {
-            float t = GetNormalizedValue(value);
-            float angle = Mathf.Lerp(needleMinAngle, needleMaxAngle, t);
-            needleTransform.localRotation = Quaternion.Euler(0f, 0f, angle);
-        }
-
-        // Arc fill
-        if (arcFillImage != null)
-            arcFillImage.fillAmount = GetNormalizedValue(value);
-
-        // Text
+        if (arcFill != null)
+            arcFill.fillAmount = GetNormalizedValue(value) * arcFillRange;
         if (valueText != null)
             valueText.text = Mathf.RoundToInt(value).ToString();
     }
 
-    /// <summary>
-    /// Polymorphism: overrides BaseGauge.OnAlert — turns gauge red above speed limit.
-    /// </summary>
+    /// <summary>Polymorphism: turns arc red above 200 km/h.</summary>
     protected override void OnAlert(float value)
     {
-        if (needleImage != null) needleImage.color = AlertColor;
-        if (arcFillImage != null) arcFillImage.color = AlertColor;
-        if (valueText != null) valueText.color = AlertColor;
+        if (arcFill   != null) arcFill.color   = AlertColor;
+        if (valueText != null) valueText.color  = AlertColor;
     }
 
     protected override void OnAlertCleared()
     {
-        if (needleImage != null) needleImage.color = NormalColor;
-        if (arcFillImage != null) arcFillImage.color = NormalColor;
-        if (valueText != null) valueText.color = Color.white;
+        if (arcFill   != null) arcFill.color   = ArcColor;
+        if (valueText != null) valueText.color  = Color.white;
     }
 }
