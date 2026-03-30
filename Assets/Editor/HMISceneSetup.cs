@@ -79,6 +79,10 @@ public static class HMISceneSetup
         var mqttGO = new GameObject("MQTTManager");
         mqttGO.AddComponent<MQTTManager>();
 
+        // ── VehicleSimulator ─────────────────────────────────────────────────
+        var simGO = new GameObject("VehicleSimulator");
+        simGO.AddComponent<VehicleSimulator>();
+
         // ── HMIController ────────────────────────────────────────────────────
         var hmiGO = new GameObject("HMIController");
         var hmi = hmiGO.AddComponent<HMIController>();
@@ -327,5 +331,59 @@ public static class HMISceneSetup
     {
         ColorUtility.TryParseHtmlString("#" + hex, out Color c);
         return c;
+    }
+
+    /// <summary>
+    /// Generates a donut (ring) sprite texture and saves it as a PNG asset.
+    /// Used to give circular gauges a proper ring appearance.
+    /// </summary>
+    [MenuItem("HMI/Generate Donut Sprite")]
+    public static Sprite GenerateDonutSprite()
+    {
+        const int size = 256;
+        const float outerRadius = 0.5f;
+        const float innerRadius = 0.36f;
+
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        var pixels = new Color[size * size];
+        Vector2 center = new Vector2(0.5f, 0.5f);
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float nx = (float)x / size;
+                float ny = (float)y / size;
+                float dist = Vector2.Distance(new Vector2(nx, ny), center);
+
+                // Smooth anti-aliased edges
+                float outer = Mathf.SmoothStep(outerRadius, outerRadius - 0.015f, dist);
+                float inner = Mathf.SmoothStep(innerRadius, innerRadius + 0.015f, dist);
+                float alpha = outer * inner;
+
+                pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+
+        System.IO.Directory.CreateDirectory(Application.dataPath + "/Sprites");
+        string path = Application.dataPath + "/Sprites/GaugeDonut.png";
+        System.IO.File.WriteAllBytes(path, tex.EncodeToPNG());
+        AssetDatabase.Refresh();
+
+        string assetPath = "Assets/Sprites/GaugeDonut.png";
+        TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+        if (importer != null)
+        {
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+
+        Debug.Log("[HMISceneSetup] Donut sprite saved to Assets/Sprites/GaugeDonut.png");
+        return AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
     }
 }

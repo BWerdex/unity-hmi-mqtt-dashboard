@@ -14,6 +14,7 @@ public abstract class BaseGauge : MonoBehaviour
     [SerializeField] protected float minValue = 0f;
     [SerializeField] protected float maxValue = 100f;
     [SerializeField] protected string gaugeLabel = "GAUGE";
+    [SerializeField] [Range(1f, 20f)] private float smoothSpeed = 6f;
 
     [Header("UI References")]
     [SerializeField] protected TextMeshProUGUI valueText;
@@ -21,10 +22,10 @@ public abstract class BaseGauge : MonoBehaviour
     [SerializeField] protected Image backgroundImage;
 
     // ── Private backing fields (Encapsulation) ───────────────────────────────
-    private float _currentValue;
+    private float _targetValue;
+    private float _displayValue;
     private float _alertThresholdMin = float.MinValue;
     private float _alertThresholdMax = float.MaxValue;
-    private bool _alertOnExceedMax = true;  // true = alert above max threshold, false = alert below min
 
     // ── Properties (Encapsulation: controlled access) ────────────────────────
     public float MinValue
@@ -41,8 +42,8 @@ public abstract class BaseGauge : MonoBehaviour
 
     public float CurrentValue
     {
-        get => _currentValue;
-        private set => _currentValue = Mathf.Clamp(value, minValue, maxValue);
+        get => _targetValue;
+        private set => _targetValue = Mathf.Clamp(value, minValue, maxValue);
     }
 
     public string Label
@@ -70,19 +71,28 @@ public abstract class BaseGauge : MonoBehaviour
             labelText.text = gaugeLabel;
     }
 
+    protected virtual void Update()
+    {
+        if (Mathf.Abs(_displayValue - _targetValue) > 0.01f)
+        {
+            _displayValue = Mathf.Lerp(_displayValue, _targetValue, Time.deltaTime * smoothSpeed);
+            UpdateDisplay(_displayValue);
+
+            if (IsInAlertState(_displayValue))
+                OnAlert(_displayValue);
+            else
+                OnAlertCleared();
+        }
+    }
+
     // ── Public API (Abstraction) ─────────────────────────────────────────────
     /// <summary>
-    /// High-level method: update gauge value. Handles clamping, display refresh,
-    /// and alert triggering automatically — callers don't need to know these details.
+    /// Set a new target value. The gauge animates smoothly toward it each frame.
+    /// Handles clamping and alert triggering — callers need none of these details.
     /// </summary>
     public void SetValue(float value)
     {
-        CurrentValue = value;                       // property setter clamps the value
-        UpdateDisplay(CurrentValue);                // polymorphic display update
-        if (IsInAlertState(CurrentValue))
-            OnAlert(CurrentValue);
-        else
-            OnAlertCleared();
+        CurrentValue = value;   // property setter clamps to min/max
     }
 
     // ── Abstract / Virtual methods (Polymorphism hooks) ──────────────────────
