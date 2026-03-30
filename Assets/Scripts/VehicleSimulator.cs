@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Globalization;
 using UnityEngine;
 
 /// <summary>
@@ -143,7 +144,9 @@ public class VehicleSimulator : MonoBehaviour
         if (MQTTManager.Instance == null || !MQTTManager.Instance.IsConnected)
             return;
 
-        string json = $"{{\"speed\":{_speed:F1},\"rpm\":{_rpm:F0},\"battery\":{_battery:F1},\"temp\":{_temp:F1}}}";
+        // InvariantCulture ensures decimal point (.) not comma — locale-safe JSON
+        var ci = CultureInfo.InvariantCulture;
+        string json = $"{{\"speed\":{_speed.ToString("F1", ci)},\"rpm\":{_rpm.ToString("F0", ci)},\"battery\":{_battery.ToString("F1", ci)},\"temp\":{_temp.ToString("F1", ci)}}}";
         MQTTManager.Instance.Publish("hmi/vehicle", json);
     }
 
